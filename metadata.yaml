@@ -2,7 +2,8 @@ name: astrbot_plugin_miodice
 display_name: 基础骰娘
 desc: 运行于 AstrBot 上的 TRPG 骰子插件，支持检定、对抗、伤害、暗骰和角色状态。
 short_desc: TRPG 骰子机器人插件。
-version: v0.1.1
+help: 略
+version: v0.1.2
 author: RuinsFeather
 repo: https://github.com/RuinsFeather/astrbot_plugin_miodice
-astrbot_version: ">=4.9.2"
+astrbot_version: ">=4.17.0"
