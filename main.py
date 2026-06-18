@@ -19,6 +19,96 @@ class MioDicePlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
 
+    @filter.regex(r"^\s*\.(help|帮助)(\s+.*)?$", priority=20)
+    async def help(self, event: AstrMessageEvent):
+        """Show command list or detailed command usage.
+
+        Args:
+            event: AstrBot message event.
+        """
+        text = event.get_message_str().strip()
+        args = re.sub(r"^\.(?:help|帮助)\s*", "", text, count=1).strip().lower()
+        command_key = args.removeprefix(".")
+        help_items = {
+            "r": (
+                "🎲 .r/.roll/.投掷/.检定\n"
+                "用途：投掷骰子；当使用 1d100 并附带技能名和技能值时，自动判定成功等级。\n"
+                "格式：.r [骰子表达式] [技能名称+技能值]\n"
+                "示例：.r 1d100 侦查60\n"
+                "示例：.r 2d6+3\n"
+                "规则：01 大成功；99-100 大失败；≤技能值成功；≤1/2 困难成功；≤1/5 极难成功。"
+            ),
+            "vs": (
+                "⚔️ .vs/.战斗\n"
+                "用途：进行双方 D100 对抗检定。\n"
+                "格式：.vs [主动方技能名+技能值] [被动方技能名+技能值]\n"
+                "示例：.vs 攻击55 闪避40\n"
+                "规则：主动方成功等级 > 被动方则主动胜；同级成功比较原始点数，高者胜。"
+            ),
+            "dmg": (
+                "🩸 .dmg/.伤害\n"
+                "用途：计算武器伤害、伤害加成、护甲减伤和生命状态。\n"
+                "格式：.dmg [伤害骰] 伤害加成[数值] 护甲[数值] hp[最大HP] hp[当前HP]\n"
+                "示例：.dmg 1d10+2 伤害加成1 护甲2 hp12 hp8\n"
+                "规则：最终伤害 = 武器骰 + 伤害加成 - 护甲；单次伤害≥最大 HP 一半触发重伤；HP≤0 濒死；HP≤-10 死亡。"
+            ),
+            "rh": (
+                "🕶️ .rh/.暗投\n"
+                "用途：KP 暗骰。群聊中结果尝试私发给发起者，群内仅提示 KP 进行了暗骰。\n"
+                "格式：.rh [骰子表达式]\n"
+                "示例：.rh 1d100"
+            ),
+            "st": (
+                "📋 .st/.状态\n"
+                "用途：查看或修改当前会话内的角色状态。\n"
+                "格式：.st [角色名]\n"
+                "格式：.st [角色名] HP [数值] MP [数值] [状态]\n"
+                "示例：.st 林默\n"
+                "示例：.st 林默 HP 10 中毒\n"
+                "示例：.st 林默 -中毒\n"
+                "说明：状态按会话保存，状态名前加 - 可移除该状态。"
+            ),
+            "help": (
+                "❓ .help/.帮助\n"
+                "用途：查看指令列表或单条指令详细说明。\n"
+                "格式：.help\n"
+                "格式：.help [指令]\n"
+                "示例：.help r\n"
+                "示例：.help .dmg"
+            ),
+        }
+        alias_map = {
+            "roll": "r",
+            "投掷": "r",
+            "检定": "r",
+            "战斗": "vs",
+            "伤害": "dmg",
+            "暗投": "rh",
+            "状态": "st",
+            "帮助": "help",
+        }
+        command_key = alias_map.get(command_key, command_key)
+        if command_key:
+            detail = help_items.get(command_key)
+            if not detail:
+                yield event.plain_result("未找到该指令。使用 .help 查看所有指令。")
+            else:
+                yield event.plain_result(detail)
+            event.stop_event()
+            return
+
+        yield event.plain_result(
+            "MioDice 指令列表：\n"
+            ".r/.roll/.投掷/.检定：骰子投掷与技能检定\n"
+            ".vs/.战斗：双方对抗检定\n"
+            ".dmg/.伤害：伤害结算\n"
+            ".rh/.暗投：KP 暗骰\n"
+            ".st/.状态：角色状态查看与修改\n"
+            ".help/.帮助：查看帮助\n"
+            "使用 .help 指令名 查看详细用法，例如：.help dmg"
+        )
+        event.stop_event()
+
     @filter.regex(r"^\s*\.(r|roll|投掷|检定)(\s+.*)?$", priority=10)
     async def roll(self, event: AstrMessageEvent):
         """Roll dice and optionally perform a percentile skill check.
@@ -29,7 +119,7 @@ class MioDicePlugin(Star):
         text = event.get_message_str().strip()
         args = re.sub(r"^\.(?:r|roll|投掷|检定)\s*", "", text, count=1).strip()
         if not args:
-            yield event.plain_result("用法：.r 1d100 侦查60")
+            yield event.plain_result("用法：.r [骰子类型] [技能名称+技能点数]/例如：.r 1d100 侦查50")
             event.stop_event()
             return
 
@@ -115,7 +205,7 @@ class MioDicePlugin(Star):
         args = re.sub(r"^\.(?:dmg|伤害)\s*", "", text, count=1).strip()
         match = re.match(r"^(\d*d\d+(?:[+-]\d*d?\d+)*)\s*(.*)$", args, re.IGNORECASE)
         if not match:
-            yield event.plain_result("用法：.dmg 1d10+2 伤害加成1 护甲2 hp12")
+            yield event.plain_result("用法：.dmg 1d10+2 伤害加成1 护甲2 hp12 hp8")
             event.stop_event()
             return
 
@@ -129,20 +219,22 @@ class MioDicePlugin(Star):
         tail = match.group(2)
         bonus_match = re.search(r"(?:伤害加成|db|加成)\s*([+-]?\d+)", tail, re.IGNORECASE)
         armor_match = re.search(r"(?:护甲|armor|armour)\s*([+-]?\d+)", tail, re.IGNORECASE)
-        hp_match = re.search(r"hp\s*([+-]?\d+)", tail, re.IGNORECASE)
+        hp_values = [int(item) for item in re.findall(r"hp\s*([+-]?\d+)", tail, re.IGNORECASE)]
         bonus = int(bonus_match.group(1)) if bonus_match else 0
         armor = int(armor_match.group(1)) if armor_match else 0
-        hp = int(hp_match.group(1)) if hp_match else 0
+        max_hp = hp_values[0] if hp_values else 0
+        current_hp = hp_values[1] if len(hp_values) > 1 else max_hp
         final_damage = max(0, weapon.total + bonus - armor)
         parts = [f"武器伤害 {weapon.expression} = {weapon.total}"]
         if bonus:
             parts.append(f"伤害加成 {bonus:+d}")
         if armor:
             parts.append(f"护甲 -{armor}")
-        if hp > 0:
-            remaining_hp = hp - final_damage
-            parts.append(f"剩余 HP：{remaining_hp}/{hp}")
-            if final_damage * 2 >= hp:
+        if max_hp > 0:
+            remaining_hp = current_hp - final_damage
+            parts.append(f"当前 HP：{current_hp}/{max_hp}")
+            parts.append(f"剩余 HP：{remaining_hp}/{max_hp}")
+            if final_damage * 2 >= max_hp:
                 parts.append("触发重伤阈值：需进行体质检定，失败则昏迷并失去行动能力")
             else:
                 parts.append("未触发重伤阈值")
