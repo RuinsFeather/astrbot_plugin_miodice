@@ -6,13 +6,3 @@ version: v0.1.1
 author: RuinsFeather
 repo: https://github.com/RuinsFeather/astrbot_plugin_miodice
 astrbot_version: ">=4.9.2"
-support_platforms:
-	- aiocqhttp
-	- qq_official
-	- qq_official_webhook
-	- telegram
-	- discord
-	- slack
-	- kook
-	- satori
-	- webchat
