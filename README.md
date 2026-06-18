@@ -1,14 +1,12 @@
-# astrbot-plugin-helloworld
+# astrbot_plugin_miodice
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+适用于 AstrBot 的基础 TRPG 骰子插件。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## 指令
 
-# Supports
-
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+- `.r/.roll/.投掷/.检定 1d100 侦查60`：投掷骰子并进行 D100 检定。
+- `.vs/.战斗 攻击55 闪避40`：模拟双方 D100 对抗，比较成功等级与原始点数。
+- `.dmg/.伤害 1d10+2 伤害加成1 护甲2 hp12`：计算武器骰、伤害加成、护甲和重伤阈值。
+- `.rh/.暗投 1d100`：KP 暗骰，群聊中结果私发 KP，群内仅显示提示。
+- `.st/.状态 林默`：查看角色状态。
+- `.st/.状态 林默 HP 10 中毒`：修改 HP/MP 并添加状态；使用 `-中毒` 可移除状态。
