@@ -30,6 +30,13 @@ class MioDicePlugin(Star):
         args = re.sub(r"^\.(?:help|帮助)\s*", "", text, count=1).strip().lower()
         command_key = args.removeprefix(".")
         help_items = {
+            "h": (
+                "📐 .h/.距离\n"
+                "用途：根据横向距离和纵向距离计算直线距离。\n"
+                "格式：.h [横向距离] [纵向距离]\n"
+                "示例：.h 3 4\n"
+                "规则：使用直角三角形斜边公式，直线距离 = sqrt(横向距离² + 纵向距离²)。"
+            ),
             "r": (
                 "🎲 .r/.roll/.投掷/.检定\n"
                 "用途：投掷骰子；当使用 1d100 并附带技能名和技能值时，自动判定成功等级。\n"
@@ -81,6 +88,7 @@ class MioDicePlugin(Star):
             "roll": "r",
             "投掷": "r",
             "检定": "r",
+            "距离": "h",
             "战斗": "vs",
             "伤害": "dmg",
             "暗投": "rh",
@@ -99,6 +107,7 @@ class MioDicePlugin(Star):
 
         yield event.plain_result(
             "MioDice 指令列表：\n"
+            ".h/.距离：直线距离计算\n"
             ".r/.roll/.投掷/.检定：骰子投掷与技能检定\n"
             ".vs/.战斗：双方对抗检定\n"
             ".dmg/.伤害：伤害结算\n"
@@ -150,6 +159,32 @@ class MioDicePlugin(Star):
         else:
             detail = " + ".join(roll_result.details)
             yield event.plain_result(f"🎲 {roll_result.expression} = {roll_result.total}\n明细：{detail}")
+        event.stop_event()
+
+    @filter.regex(r"^\s*\.(h|距离)(\s+.*)?$", priority=10)
+    async def distance(self, event: AstrMessageEvent):
+        """Calculate straight-line distance from two axis values.
+
+        Args:
+            event: AstrBot message event.
+        """
+        text = event.get_message_str().strip()
+        args = re.sub(r"^\.(?:h|距离)\s*", "", text, count=1).strip()
+        parts = args.split()
+        if len(parts) != 2 or not all(re.fullmatch(r"[+-]?\d+(?:\.\d+)?", item) for item in parts):
+            yield event.plain_result("用法：.h 横向距离 纵向距离，例如：.h 3 4")
+            event.stop_event()
+            return
+
+        horizontal = float(parts[0])
+        vertical = float(parts[1])
+        distance = (horizontal ** 2 + vertical ** 2) ** 0.5
+        yield event.plain_result(
+            f"📐 直线距离计算\n"
+            f"横向距离：{horizontal:g}\n"
+            f"纵向距离：{vertical:g}\n"
+            f"斜边长度：{distance:.2f}"
+        )
         event.stop_event()
 
     @filter.regex(r"^\s*\.(vs|战斗)(\s+.*)?$", priority=10)
